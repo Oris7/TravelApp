@@ -12,7 +12,7 @@ using TravelRecommendations.Data;
 namespace TravelRecommendations.Migrations
 {
     [DbContext(typeof(RestContext))]
-    [Migration("20251202022844_InitialCreate")]
+    [Migration("20251202093659_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
