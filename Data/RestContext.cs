@@ -7,14 +7,19 @@ namespace TravelRecommendations.Data
 {
     public class RestContext : IdentityDbContext<User>
     {
+        // Constructor with DbContextOptions injection
+        public RestContext(DbContextOptions<RestContext> options)
+            : base(options)
+        {
+        }
+
+        // DbSets
         public DbSet<Country> Countries { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<Activity> Activities { get; set; }
         public DbSet<Session> Sessions { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB; Initial Catalog=Rest");
-        }
+        // Remove OnConfiguring entirely
+        // Database configuration is now done in Program.cs
     }
 }
