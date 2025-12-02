@@ -24,7 +24,15 @@ var builder = WebApplication.CreateBuilder(args);
 });*/
 
 // what used to be ConfigureServices
-builder.Services.AddDbContext<RestContext>();
+
+
+//builder.Services.AddDbContext<RestContext>();
+
+builder.Services.AddDbContext<RestContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
+
+
+
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddTransient<ICountriesRepository, CountriesRepository>();
 builder.Services.AddTransient<ICitiesRepository, CitiesRepository>();
