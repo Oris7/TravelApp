@@ -28,8 +28,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 //builder.Services.AddDbContext<RestContext>();
 
+/*builder.Services.AddDbContext<RestContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));*/
+
 builder.Services.AddDbContext<RestContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"),
+        npgsqlOptions => npgsqlOptions
+            .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+
 
 
 
@@ -83,12 +89,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();      // atidaro Swagger UI naršyklėje
 }
 
+
+app.UseAuthentication();
+app.UseAuthorization();
 app.AddAuthApi();
 
 app.MapGet("/", () => "Hello World!");
 
 // what used to be Configure
 app.MapControllers();
-app.UseAuthentication();
-app.UseAuthorization();
+
 app.Run();
