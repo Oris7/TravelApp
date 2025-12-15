@@ -30,7 +30,7 @@ namespace TravelRecommendations.Controllers
             _countriesRepository = countriesRepository;
         }
 
-
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IEnumerable<CityDto>> GetAllAsync(int countryId)
         {
@@ -40,6 +40,7 @@ namespace TravelRecommendations.Controllers
 
 
         // /api/countries/1/cities/2
+        [AllowAnonymous]
         [HttpGet("{cityId}")]
         public async Task<ActionResult<CityDto>> GetAsync(int countryId, int cityId)
         {

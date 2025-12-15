@@ -28,7 +28,7 @@ namespace TravelRecommendations.Controllers
             _countriesRepository = countriesRepository;
         }
 
-
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IEnumerable<ActivityDto>> GetAllAsync(int cityId)
         {
@@ -36,6 +36,7 @@ namespace TravelRecommendations.Controllers
             return cities.Select(o => _mapper.Map<ActivityDto>(o));
         }
 
+        [AllowAnonymous]
         [HttpGet("{activityId}")]
         public async Task<ActionResult<ActivityDto>> GetAsync(int cityId, int activityId)
         {
