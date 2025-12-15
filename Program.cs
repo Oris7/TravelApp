@@ -9,54 +9,39 @@ using TravelRecommendations.Data;
 using TravelRecommendations.Data.Repositories;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
-//var builder = WebApplication.CreateBuilder(args);
-//var app = builder.Build();
-
-//app.MapGet("/", () => "Hello World!");
-
 var builder = WebApplication.CreateBuilder(args);
 
-/*builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod();
-    });
-});*/
-
-// what used to be ConfigureServices
+// Database
 builder.Services.AddDbContext<RestContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
+
+// AutoMapper & Repositories
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddTransient<ICountriesRepository, CountriesRepository>();
 builder.Services.AddTransient<ICitiesRepository, CitiesRepository>();
 builder.Services.AddTransient<IActivitiesRepository, ActivitiesRepository>();
 builder.Services.AddControllers();
 
+// CORS for frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // tavo React frontend lokaliai
+        policy.WithOrigins("http://localhost:5173") // local frontend dev
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
+// JWT Auth
 builder.Services.AddTransient<JwtTokenService>();
 builder.Services.AddTransient<SessionService>();
 builder.Services.AddScoped<AuthSeeder>();
-
-builder.Services.AddEndpointsApiExplorer(); // leidžia generuoti OpenAPI JSON
-builder.Services.AddSwaggerGen();           // įjungia Swagger
-
-
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<RestContext>()
     .AddDefaultTokenProviders();
 
-
-builder.Services.AddAuthentication(configureOptions: options =>
+builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -66,35 +51,46 @@ builder.Services.AddAuthentication(configureOptions: options =>
     options.MapInboundClaims = false;
     options.TokenValidationParameters.ValidAudience = builder.Configuration["Jwt:ValidAudience"];
     options.TokenValidationParameters.ValidIssuer = builder.Configuration["Jwt:ValidIssuer"];
-    options.TokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]));
+    options.TokenValidationParameters.IssuerSigningKey =
+        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]));
 });
 
 builder.Services.AddAuthorization();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Database Migrations & Seeding
 using var scope = app.Services.CreateScope();
-
 var dbContext = scope.ServiceProvider.GetRequiredService<RestContext>();
 dbContext.Database.Migrate();
 
 var dbSeeder = scope.ServiceProvider.GetRequiredService<AuthSeeder>();
 await dbSeeder.SeedAsync();
 
+// Swagger for dev
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();        // sugeneruoja OpenAPI JSON
-    app.UseSwaggerUI();      // atidaro Swagger UI naršyklėje
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
+// Auth API
 app.AddAuthApi();
 
-app.MapGet("/", () => "Hello World!");
-
-app.UseRouting(); // pridėk, jei dar neturi
-
-app.UseCors("AllowFrontend");      // <- CORS middleware turi būti čia
+// Routing & Middleware
+app.UseRouting();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapControllers();
 
-app.MapControllers();              // po CORS ir Auth
+// Default endpoint
+app.MapGet("/", () => "Hello World!");
+
+// ✅ Make the app listen on the correct port for DO
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://*:{port}");
+
+app.Run();
