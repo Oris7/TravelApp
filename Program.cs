@@ -24,26 +24,22 @@ var builder = WebApplication.CreateBuilder(args);
 });*/
 
 // what used to be ConfigureServices
-
-
-//builder.Services.AddDbContext<RestContext>();
-
-/*builder.Services.AddDbContext<RestContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));*/
-
-builder.Services.AddDbContext<RestContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL"),
-        npgsqlOptions => npgsqlOptions
-            .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-
-
-
-
+builder.Services.AddDbContext<RestContext>();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddTransient<ICountriesRepository, CountriesRepository>();
 builder.Services.AddTransient<ICitiesRepository, CitiesRepository>();
 builder.Services.AddTransient<IActivitiesRepository, ActivitiesRepository>();
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // tavo React frontend lokaliai
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddTransient<JwtTokenService>();
 builder.Services.AddTransient<SessionService>();
@@ -89,14 +85,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();      // atidaro Swagger UI naršyklėje
 }
 
-
-app.UseAuthentication();
-app.UseAuthorization();
 app.AddAuthApi();
 
 app.MapGet("/", () => "Hello World!");
 
-// what used to be Configure
-app.MapControllers();
+app.UseRouting(); // pridėk, jei dar neturi
 
-app.Run();
+app.UseCors("AllowFrontend");      // <- CORS middleware turi būti čia
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();              // po CORS ir Auth
