@@ -7,6 +7,7 @@ using TravelRecommendations.Auth;
 using TravelRecommendations.Auth.Model;
 using TravelRecommendations.Data;
 using TravelRecommendations.Data.Repositories;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 //var builder = WebApplication.CreateBuilder(args);
 //var app = builder.Build();
@@ -24,7 +25,8 @@ var builder = WebApplication.CreateBuilder(args);
 });*/
 
 // what used to be ConfigureServices
-builder.Services.AddDbContext<RestContext>();
+builder.Services.AddDbContext<RestContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddTransient<ICountriesRepository, CountriesRepository>();
 builder.Services.AddTransient<ICitiesRepository, CitiesRepository>();
