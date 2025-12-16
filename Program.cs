@@ -27,7 +27,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // local frontend dev
+        policy.WithOrigins("http://localhost:5173", "https://sea-lion-app-ccqwa.ondigitalocean.app") // local frontend dev
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
